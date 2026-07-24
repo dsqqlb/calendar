@@ -1337,11 +1337,26 @@
         list.appendChild(li);
       });
     }
-    $('#addCategoryBtn').addEventListener('click', function () {
+    $('#addCategoryBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
       var name = prompt('新日历名称：');
       if (!name) return;
       addCategory(name.trim(), PALETTE[getCategories().length % PALETTE.length]);
       toast('已添加分类');
+    });
+
+    // Toggle category list dropdown
+    var calListSection = $('#calListSection');
+    var calListToggle = $('#calListToggle');
+    // Load saved state or default to expanded
+    var calListExpanded = localStorage.getItem('calListExpanded');
+    if (calListExpanded === null || calListExpanded === 'true') {
+      calListSection.classList.add('is-expanded');
+    }
+    calListToggle.addEventListener('click', function (e) {
+      if (e.target.closest('#addCategoryBtn')) return;
+      var isExpanded = calListSection.classList.toggle('is-expanded');
+      localStorage.setItem('calListExpanded', isExpanded);
     });
 
     // ---------- Special days (custom festivals / anniversaries) ----------

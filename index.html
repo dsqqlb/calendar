@@ -30,9 +30,12 @@
 
       <div class="mini-calendar" id="miniCalendar"></div>
 
-      <div class="cal-list">
-        <div class="cal-list__header">
-          <span>我的日历</span>
+      <div class="cal-list" id="calListSection">
+        <div class="cal-list__header" id="calListToggle">
+          <div class="cal-list__title">
+            <span class="cal-list__arrow">›</span>
+            <span>我的日历</span>
+          </div>
           <button class="icon-btn" id="addCategoryBtn" aria-label="添加分类" title="添加分类">＋</button>
         </div>
         <ul class="cal-list__items" id="categoryList"></ul>

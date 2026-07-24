@@ -231,7 +231,42 @@ input, select, textarea { font-family: inherit; }
   color: var(--text-secondary);
   padding: 0 4px 6px;
 }
-.cal-list__items { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+.cal-list__title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+}
+.cal-list__title:hover { color: var(--text); }
+.cal-list__arrow {
+  display: inline-block;
+  font-size: 16px;
+  transition: transform 0.2s var(--ease);
+  transform: rotate(0deg);
+}
+.cal-list.is-expanded .cal-list__arrow {
+  transform: rotate(90deg);
+}
+.cal-list__items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* Only apply collapse behavior to sections with toggle */
+#calListSection .cal-list__items {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s var(--ease), opacity 0.2s var(--ease);
+}
+#calListSection.is-expanded .cal-list__items {
+  max-height: 1000px;
+  opacity: 1;
+  margin-top: 4px;
+}
 .cal-item {
   display: flex;
   align-items: center;
