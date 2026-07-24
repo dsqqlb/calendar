@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <meta name="description" content="一个漂亮的苹果风格网页日历" />
+  <title>日历 · Calendar</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+</head>
+<body>
+  <div id="app" class="app" data-view="month">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__header">
+        <div class="brand">
+          <span class="brand__glyph">📅</span>
+          <span class="brand__name">日历</span>
+        </div>
+        <button class="icon-btn sidebar__close" id="sidebarClose" aria-label="关闭侧栏">✕</button>
+      </div>
+
+      <div class="search">
+        <span class="search__icon">🔍</span>
+        <input type="search" id="searchInput" class="search__input" placeholder="搜索事件" autocomplete="off" />
+      </div>
+      <div class="search-results" id="searchResults" hidden></div>
+
+      <div class="mini-calendar" id="miniCalendar"></div>
+
+      <div class="cal-list">
+        <div class="cal-list__header">
+          <span>我的日历</span>
+          <button class="icon-btn" id="addCategoryBtn" aria-label="添加分类" title="添加分类">＋</button>
+        </div>
+        <ul class="cal-list__items" id="categoryList"></ul>
+      </div>
+
+      <div class="cal-list">
+        <div class="cal-list__header">
+          <span>纪念日 · 节日</span>
+          <button class="icon-btn" id="editSpecialBtn" aria-label="编辑纪念日" title="编辑纪念日">✎</button>
+        </div>
+        <ul class="cal-list__items" id="specialMiniList"></ul>
+      </div>
+
+      <div class="sidebar__footer">
+        <button class="text-btn" id="importBtn" title="导入 .ics">导入</button>
+        <button class="text-btn" id="exportBtn" title="导出 .ics">导出</button>
+        <button class="text-btn" id="settingsBtn" title="设置">设置</button>
+        <input type="file" id="importFile" accept=".ics" hidden />
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="toolbar">
+        <div class="toolbar__left">
+          <button class="icon-btn menu-btn" id="menuBtn" aria-label="菜单">☰</button>
+          <button class="pill today-btn" id="todayBtn">今天</button>
+          <div class="nav">
+            <button class="icon-btn" id="prevBtn" aria-label="上一个">‹</button>
+            <button class="icon-btn" id="nextBtn" aria-label="下一个">›</button>
+          </div>
+          <h1 class="toolbar__title" id="periodTitle">—</h1>
+        </div>
+        <div class="toolbar__right">
+          <div class="segmented" id="viewSwitch" role="tablist">
+            <button class="segmented__item" data-view="day" role="tab">日</button>
+            <button class="segmented__item" data-view="week" role="tab">周</button>
+            <button class="segmented__item is-active" data-view="month" role="tab">月</button>
+            <button class="segmented__item" data-view="year" role="tab">年</button>
+          </div>
+          <button class="pill pill--accent add-event-btn" id="newEventBtn">＋</button>
+          <button class="icon-btn" id="themeBtn" aria-label="切换主题" title="切换主题">◐</button>
+        </div>
+      </header>
+
+      <section class="view" id="viewContainer" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <!-- Event editor modal -->
+  <div class="modal" id="eventModal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+      <header class="modal__header">
+        <button class="text-btn" data-close>取消</button>
+        <h2 id="eventModalTitle">新建事件</h2>
+        <button class="text-btn text-btn--accent" id="saveEventBtn">添加</button>
+      </header>
+      <div class="modal__body">
+        <input type="text" id="evTitle" class="field field--title" placeholder="标题" />
+        <input type="text" id="evLocation" class="field" placeholder="地点或视频通话" />
+
+        <div class="field-row">
+          <label class="toggle">
+            <span>全天</span>
+            <input type="checkbox" id="evAllDay" />
+            <span class="toggle__track"><span class="toggle__thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">开始</label>
+          <input type="datetime-local" id="evStart" class="field field--dt" />
+        </div>
+        <div class="field-row">
+          <label class="field-label">结束</label>
+          <input type="datetime-local" id="evEnd" class="field field--dt" />
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">重复</label>
+          <select id="evRepeat" class="field field--select">
+            <option value="none">永不</option>
+            <option value="daily">每天</option>
+            <option value="weekly">每周</option>
+            <option value="monthly">每月</option>
+            <option value="yearly">每年</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">提醒</label>
+          <select id="evAlert" class="field field--select">
+            <option value="none">无</option>
+            <option value="0">事件发生时</option>
+            <option value="5">提前 5 分钟</option>
+            <option value="15">提前 15 分钟</option>
+            <option value="30">提前 30 分钟</option>
+            <option value="60">提前 1 小时</option>
+            <option value="1440">提前 1 天</option>
+          </select>
+        </div>
+
+        <textarea id="evNotes" class="field field--notes" placeholder="备注"></textarea>
+      </div>
+      <footer class="modal__footer">
+        <button class="text-btn text-btn--danger" id="deleteEventBtn" hidden>删除事件</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <header class="modal__header">
+        <span></span>
+        <h2 id="settingsTitle">设置</h2>
+        <button class="text-btn text-btn--accent" data-close>完成</button>
+      </header>
+      <div class="modal__body">
+        <div class="field-row">
+          <label class="field-label">外观</label>
+          <select id="setTheme" class="field field--select">
+            <option value="auto">跟随系统</option>
+            <option value="light">浅色</option>
+            <option value="dark">深色</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label class="field-label">每周起始</label>
+          <select id="setWeekStart" class="field field--select">
+            <option value="0">周日</option>
+            <option value="1">周一</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label class="toggle">
+            <span>显示农历</span>
+            <input type="checkbox" id="setLunar" />
+            <span class="toggle__track"><span class="toggle__thumb"></span></span>
+          </label>
+        </div>
+        <div class="field-row">
+          <label class="toggle">
+            <span>显示周数</span>
+            <input type="checkbox" id="setWeekNumbers" />
+            <span class="toggle__track"><span class="toggle__thumb"></span></span>
+          </label>
+        </div>
+        <div class="field-row">
+          <label class="toggle">
+            <span>24 小时制</span>
+            <input type="checkbox" id="set24h" />
+            <span class="toggle__track"><span class="toggle__thumb"></span></span>
+          </label>
+        </div>
+        <div class="field-row">
+          <label class="toggle">
+            <span>显示法定节假日</span>
+            <input type="checkbox" id="setHolidays" />
+            <span class="toggle__track"><span class="toggle__thumb"></span></span>
+          </label>
+        </div>
+        <div class="field-row">
+          <button class="pill sync-btn" id="syncHolidayBtn">🌐 同步节假日（联网）</button>
+        </div>
+        <p class="settings-hint" id="holidayHint">从公开数据源获取中国大陆法定节假日与调休安排（休 / 班）。</p>
+        <div class="settings-tips">
+          <p>快捷键：<kbd>T</kbd> 今天 · <kbd>N</kbd> 新建 · <kbd>←/→</kbd> 切换 · <kbd>1/2/3/4</kbd> 视图 · <kbd>/</kbd> 搜索</p>
+        </div>
+        <button class="text-btn text-btn--danger" id="clearDataBtn">清除所有数据</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Special days (custom festivals / anniversaries) editor -->
+  <div class="modal" id="specialModal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="specialTitle">
+      <header class="modal__header">
+        <button class="text-btn" data-close>关闭</button>
+        <h2 id="specialTitle">纪念日 · 节日</h2>
+        <button class="text-btn text-btn--accent" id="spDoneBtn" data-close>完成</button>
+      </header>
+      <div class="modal__body">
+        <ul class="special-list" id="specialList"></ul>
+
+        <div class="special-form" id="specialForm">
+          <div class="special-form__title" id="spFormTitle">添加纪念日</div>
+          <div class="special-form__row">
+            <input id="spEmoji" class="field field--emoji" maxlength="2" placeholder="🎂" />
+            <input id="spName" class="field" placeholder="名称，例如：妈妈生日" />
+          </div>
+          <div class="field-row">
+            <label class="field-label">历法</label>
+            <div class="segmented sp-caltype" id="spCalType">
+              <button type="button" class="segmented__item is-active" data-cal="solar">公历</button>
+              <button type="button" class="segmented__item" data-cal="lunar">农历</button>
+            </div>
+          </div>
+          <div class="field-row" id="spSolarRow">
+            <label class="field-label">日期</label>
+            <input id="spDate" type="date" class="field field--dt" />
+          </div>
+          <div class="field-row" id="spLunarRow" hidden>
+            <label class="field-label">农历</label>
+            <select id="spLunarMonth" class="field field--select"></select>
+            <select id="spLunarDay" class="field field--select"></select>
+          </div>
+          <div class="field-row" id="spYearlyRow">
+            <label class="toggle">
+              <span>每年重复</span>
+              <input type="checkbox" id="spYearly" checked />
+              <span class="toggle__track"><span class="toggle__thumb"></span></span>
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field-label">颜色</label>
+            <div class="color-swatches" id="spColors"></div>
+          </div>
+          <div class="special-form__actions">
+            <button class="text-btn" id="spCancelBtn" hidden>取消编辑</button>
+            <button class="pill pill--accent" id="spSaveBtn">添加</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="./js/bundle.js"></script>
+</body>
+</html>
